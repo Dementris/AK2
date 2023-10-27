@@ -42,6 +42,13 @@ static unsigned int repeate_count = 1;
 module_param(repeate_count,uint,S_IRUGO);
 MODULE_PARM_DESC(repeate_count, "Number of times to print 'Hello, world' ");
 
+struct hello_data{
+	struct list_head tlist;
+	ktime_t time;
+};
+
+static LIST_HEAD(hello_list_head);
+
 static int __init hello_init(void)
 {	
 	if (repeate_count == 0 || repeate_count >= 5 && repeate_count <= 10)
@@ -55,9 +62,18 @@ static int __init hello_init(void)
 		return -EINVAL;
 	}
 	
+	struct hello_data *data;
 	int i;
 	for (i = 0; i < repeate_count; i++)
 	{
+		data = kmalloc(sizeof(struct hello_data), GFP_KERNEL);
+		if (!data) {
+        return -ENOMEM; // Перевірка на помилку виділення пам'яті
+    	}
+		INIT_LIST_HEAD(&data->tlist);
+		data->time = ktime_get();
+		list_add_tail(&data->tlist, &hello_list_head);
+
 		printk(KERN_EMERG "Hello, world!\n");
 	}
 	return 0;
@@ -65,7 +81,12 @@ static int __init hello_init(void)
 
 static void __exit hello_exit(void)
 {
-	/* Do nothing here right now */
+	struct hello_data *data, *tmp;
+    list_for_each_entry_safe(data, tmp, &hello_list_head, tlist) {
+        printk(KERN_INFO "Event time: %lld ns\n", ktime_to_ns(data->time));
+        list_del(&data->tlist);
+        kfree(data);
+    }
 }
 
 module_init(hello_init);
