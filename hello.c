@@ -11,7 +11,7 @@
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
+ *    must display the following acknowledgment:
  *    This product includes software developed by the GlobalLogic.
  * 4. Neither the name of the GlobalLogic nor the
  *    names of its contributors may be used to endorse or promote products
@@ -32,6 +32,7 @@
 #include <linux/init.h>
 #include <linux/module.h>
 #include <linux/printk.h>
+#include <linux/slab.h>
 
 MODULE_AUTHOR("Serhii Popovych <serhii.popovych@globallogic.com>");
 MODULE_DESCRIPTION("Hello, world in Linux Kernel Training");
@@ -39,10 +40,10 @@ MODULE_LICENSE("Dual BSD/GPL");
 
 static unsigned int repeate_count = 1;
 
-module_param(repeate_count,uint,S_IRUGO);
+module_param(repeate_count, uint, 0444);
 MODULE_PARM_DESC(repeate_count, "Number of times to print 'Hello, world' ");
 
-struct hello_data{
+struct hello_data {
 	struct list_head tlist;
 	ktime_t time;
 };
@@ -50,26 +51,23 @@ struct hello_data{
 static LIST_HEAD(hello_list_head);
 
 static int __init hello_init(void)
-{	
-	if (repeate_count == 0 || repeate_count >= 5 && repeate_count <= 10)
-	{
+{
+	int i;
+	struct hello_data *data;
+
+	if (repeate_count == 0 || (repeate_count >= 5 && repeate_count <= 10)) {
 		printk(KERN_WARNING "WARNING: Invalid value for repeat_count\n");
 		repeate_count = 1;
-	}
-	else if (repeate_count > 10)
-	{
+	} else if (repeate_count > 10) {
 		printk(KERN_ERR "ERROR: Invalid value for repeat_count, cannot load the module\n");
 		return -EINVAL;
 	}
-	
-	struct hello_data *data;
-	int i;
-	for (i = 0; i < repeate_count; i++)
-	{
+
+	for (i = 0; i < repeate_count; i++) {
 		data = kmalloc(sizeof(struct hello_data), GFP_KERNEL);
 		if (!data) {
-        return -ENOMEM; // Перевірка на помилку виділення пам'яті
-    	}
+	return -ENOMEM; // Перевірка на помилку виділення пам'яті
+	}
 		INIT_LIST_HEAD(&data->tlist);
 		data->time = ktime_get();
 		list_add_tail(&data->tlist, &hello_list_head);
@@ -83,9 +81,9 @@ static void __exit hello_exit(void)
 {
 	struct hello_data *data, *tmp;
     list_for_each_entry_safe(data, tmp, &hello_list_head, tlist) {
-        printk(KERN_INFO "Event time: %lld ns\n", ktime_to_ns(data->time));
-        list_del(&data->tlist);
-        kfree(data);
+	printk(KERN_INFO "Event time: %lld ns\n", ktime_to_ns(data->time));
+	list_del(&data->tlist);
+	kfree(data);
     }
 }
 
