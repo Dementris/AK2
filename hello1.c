@@ -33,59 +33,52 @@
 #include <linux/module.h>
 #include <linux/printk.h>
 #include <linux/slab.h>
+#include "hello1.h"
 
 MODULE_AUTHOR("Serhii Popovych <serhii.popovych@globallogic.com>");
 MODULE_DESCRIPTION("Hello, world in Linux Kernel Training");
 MODULE_LICENSE("Dual BSD/GPL");
 
-static unsigned int repeate_count = 1;
-
-module_param(repeate_count, uint, 0444);
-MODULE_PARM_DESC(repeate_count, "Number of times to print 'Hello, world' ");
-
-struct hello_data {
-	struct list_head tlist;
-	ktime_t time;
-};
-
 static LIST_HEAD(hello_list_head);
 
-static int __init hello_init(void)
+void print_hello(void)
 {
-	int i;
 	struct hello_data *data;
 
-	if (repeate_count == 0 || (repeate_count >= 5 && repeate_count <= 10)) {
-		printk(KERN_WARNING "WARNING: Invalid value for repeat_count\n");
-		repeate_count = 1;
-	} else if (repeate_count > 10) {
-		printk(KERN_ERR "ERROR: Invalid value for repeat_count, cannot load the module\n");
-		return -EINVAL;
+	data = kmalloc(sizeof(struct hello_data), GFP_KERNEL);
+	if (!data) {
+		pr_err("Memory allocation failed\n");
+		return; // Перевірка на помилку виділення пам'яті
 	}
 
-	for (i = 0; i < repeate_count; i++) {
-		data = kmalloc(sizeof(struct hello_data), GFP_KERNEL);
-		if (!data) {
-	return -ENOMEM; // Перевірка на помилку виділення пам'яті
-	}
-		INIT_LIST_HEAD(&data->tlist);
-		data->time = ktime_get();
-		list_add_tail(&data->tlist, &hello_list_head);
+	data->before_time = ktime_get();
+	printk(KERN_INFO "Hello, world!\n");
+	data->after_time = ktime_get();
 
-		printk(KERN_EMERG "Hello, world!\n");
-	}
+	INIT_LIST_HEAD(&data->tlist);
+	list_add_tail(&data->tlist, &hello_list_head);
+
+}
+
+EXPORT_SYMBOL(print_hello);
+
+static int __init hello1_init(void)
+{
+	pr_info("hello1 module loaded\n");
 	return 0;
 }
 
-static void __exit hello_exit(void)
+static void __exit hello1_exit(void)
 {
+	ktime_t print_time;
 	struct hello_data *data, *tmp;
     list_for_each_entry_safe(data, tmp, &hello_list_head, tlist) {
-	printk(KERN_INFO "Event time: %lld ns\n", ktime_to_ns(data->time));
-	list_del(&data->tlist);
-	kfree(data);
+		print_time = ktime_sub(data->after_time, data->before_time);
+		printk(KERN_INFO "Event time: %lld ns\n", ktime_to_ns(print_time));
+		list_del(&data->tlist);
+		kfree(data);
     }
 }
 
-module_init(hello_init);
-module_exit(hello_exit);
+module_init(hello1_init);
+module_exit(hello1_exit);
