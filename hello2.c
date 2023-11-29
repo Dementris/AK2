@@ -39,24 +39,24 @@ MODULE_AUTHOR("Serhii Popovych <serhii.popovych@globallogic.com>");
 MODULE_DESCRIPTION("Hello, world in Linux Kernel Training");
 MODULE_LICENSE("Dual BSD/GPL");
 
-static unsigned int repeate_count = 1;
+static unsigned int repeat_count = 1;
 
-module_param(repeate_count, uint, 0444);
-MODULE_PARM_DESC(repeate_count, "Number of times to print 'Hello, world' ");
+module_param(repeat_count, uint, 0444);
+MODULE_PARM_DESC(repeat_count, "Number of times to print 'Hello, world' ");
 
 static int __init hello2_init(void)
 {
 	int i;
 
-	if (repeate_count == 0 || (repeate_count >= 5 && repeate_count <= 10)) {
-		printk(KERN_WARNING "WARNING: Invalid value for repeat_count\n");
-		repeate_count = 1;
-	} else if (repeate_count > 10) {
-		printk(KERN_ERR "ERROR: Invalid value for repeat_count, cannot load the module\n");
+	if (repeat_count == 0 || (repeat_count >= 5 && repeat_count <= 10)) {
+		pr_warn("WARNING: Invalid value for repeat_count\n");
+		repeat_count = 1;
+	} else if (repeat_count > 10) {
+		pr_err(KERN_ERR "ERROR: Invalid value for repeat_count, cannot load the module\n");
 		return -EINVAL;
 	}
 
-	for (i = 0; i < repeate_count; i++) {
+	for (i = 0; i < repeat_count; i++) {
         print_hello();
     }
 

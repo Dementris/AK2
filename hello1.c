@@ -52,7 +52,7 @@ void print_hello(void)
 	}
 
 	data->before_time = ktime_get();
-	printk(KERN_INFO "Hello, world!\n");
+	pr_info("Hello, world!\n");
 	data->after_time = ktime_get();
 
 	INIT_LIST_HEAD(&data->tlist);
@@ -74,7 +74,7 @@ static void __exit hello1_exit(void)
 	struct hello_data *data, *tmp;
     list_for_each_entry_safe(data, tmp, &hello_list_head, tlist) {
 		print_time = ktime_sub(data->after_time, data->before_time);
-		printk(KERN_INFO "Event time: %lld ns\n", ktime_to_ns(print_time));
+		pr_info("Event time: %lld ns\n", ktime_to_ns(print_time));
 		list_del(&data->tlist);
 		kfree(data);
     }
