@@ -39,6 +39,8 @@ MODULE_AUTHOR("Serhii Popovych <serhii.popovych@globallogic.com>");
 MODULE_DESCRIPTION("Hello, world in Linux Kernel Training");
 MODULE_LICENSE("Dual BSD/GPL");
 
+unsigned int i = 0;
+
 static LIST_HEAD(hello_list_head);
 
 void print_hello(void)
@@ -46,18 +48,19 @@ void print_hello(void)
 	struct hello_data *data;
 
 	data = kmalloc(sizeof(struct hello_data), GFP_KERNEL);
-	if (!data) {
-		pr_err("Memory allocation failed\n");
-		return; // Перевірка на помилку виділення пам'яті
+	if (i == 3) {
+		data = 0;
 	}
 
+	BUG_ON(!data);
+	
 	data->before_time = ktime_get();
 	pr_info("Hello, world!\n");
 	data->after_time = ktime_get();
 
 	INIT_LIST_HEAD(&data->tlist);
 	list_add_tail(&data->tlist, &hello_list_head);
-
+	i++;
 }
 
 EXPORT_SYMBOL(print_hello);

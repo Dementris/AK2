@@ -53,7 +53,7 @@ static int __init hello2_init(void)
 		repeat_count = 1;
 	} else if (repeat_count > 10) {
 		pr_err(KERN_ERR "ERROR: Invalid value for repeat_count, cannot load the module\n");
-		return -EINVAL;
+		BUG_ON(1);
 	}
 
 	for (i = 0; i < repeat_count; i++) {
